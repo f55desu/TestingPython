@@ -1,4 +1,4 @@
-from numba import jit, njit, vectorize
+from numba import cuda, jit, njit, vectorize, uint32, f8, uint8
 from matplotlib import pyplot as plt
 from pylab import imshow, show
 import numpy as np
@@ -11,7 +11,6 @@ def progress_bar(current, total, barLength=50):
     spaces = ' ' * (barLength - len(arrow))
     sys.stdout.write('\rСоздаётся фрактал: [%s%s]' % (arrow, spaces))
 
-@jit
 def mandel(x, y, max_iters):
 
     c = complex(x, y)
@@ -22,7 +21,9 @@ def mandel(x, y, max_iters):
             return i
     
     return max_iters
-@jit
+
+mandel_gpu = cuda.jit(uint32(f8, f8, uint32), device=True)(mandel)
+@cuda.jit(argtypes = [f8, f8, f8, f8, uint8[:,:], uint32])
 def create_fractal(min_x, max_x, min_y, max_y, image, iters):
     height = image.shape[0]
     width = image.shape[1]
@@ -30,11 +31,15 @@ def create_fractal(min_x, max_x, min_y, max_y, image, iters):
     pixel_size_x = (max_x - min_x) / width
     pixel_size_y = (max_y - min_y) / height
 
-    for x in range(width):
+    startX, startY = cuda.grid(2)
+    gridX = cuda.gridDim.x * cuda.blockDim.x
+    gridY = cuda.gridDim.y * cuda.blockDim.y
+
+    for x in range(startX, width, gridX):
         real = min_x + x * pixel_size_x
-        for y in range(height):
+        for y in range(startY, height, gridY):
             img = min_y + y * pixel_size_y
-            color = mandel(real, img, iters)
+            color = mandel_gpu(real, img, iters)
             image[y, x] = color
         progress_bar(x, width, 75)
 user_iters = int(input("Введите количество итераций фрактала: "))
