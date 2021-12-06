@@ -11,7 +11,7 @@ def progress_bar(current, total, barLength=50):
     spaces = ' ' * (barLength - len(arrow))
     sys.stdout.write('\rСоздаётся фрактал: [%s%s]' % (arrow, spaces))
 
-@jit
+
 def mandel(x, y, max_iters):
 
     c = complex(x, y)
@@ -22,7 +22,7 @@ def mandel(x, y, max_iters):
             return i
     
     return max_iters
-@jit
+
 def create_fractal(min_x, max_x, min_y, max_y, image, iters):
     height = image.shape[0]
     width = image.shape[1]
