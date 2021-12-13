@@ -10,7 +10,7 @@ def fix_predigits(pi_digits, curr_index=-1):
         pi_digits[curr_index] += 1
         pi_digits.append(0)
 
-DIGITS = 1000
+DIGITS = 10000
 array_len = int(10 * DIGITS / 3) + 1
 array = [2] * array_len
 carry = 0
